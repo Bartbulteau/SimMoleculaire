@@ -15,7 +15,7 @@ def V(x):
 
 # Dérivée
 def Vprime(x):
-    return x*(x**2 + x - 1)
+    return x**3 - x + x**2
 
 def plot_potential():
     # représentation graphique
@@ -99,21 +99,59 @@ def estimateur_AMS(X0, M, h, epsilon, debug=False):
 
     return p_estim
 
-if __name__ == '__main__':
-    """
-    epsilons = [0.1*i for i in range(1, 5)]
-    hs = [0.1*i for i in range(1, 5)]
+def T12_MC_naif(x0, h, epsilon, N):
+    # variables
+    global x1
+    global x2
+    sigma = np.sqrt(2*epsilon*h)
+    t1 = 0
+    t2 = 0
+    E = 0.0
+    Xn = x0
 
-    naif = [MC_naif(x1+0.1, epsilons[i], hs[i], 1000) for i in range(len(epsilons))]
-    AMS = [estimateur_AMS(x1+0.1, 1000, hs[i], epsilons[i]) for i in range(len(epsilons))]
+    # simulation
+    i = 0
+    for _ in range(N):
+        # calcul t1
+        while Xn >= x1:
+            Xn = Xn - Vprime(Xn)*h + sigma*np.random.randn()
+            print(Xn)
+            i += 1
+        t1 = i
+        while Xn <= x2:
+            Xn = Xn - Vprime(Xn)*h + sigma*np.random.randn()
+            print(Xn)
+            i += 1
+        t2 = i
 
-    plt.plot(epsilons, naif, label='Méthode de Monte-Carlo naïve')
-    plt.plot(epsilons, AMS, label='Estimateur AMS')
+        E += (t2 - t1)*h/N
+
+    return E
+
+
+
+"""
+Partie nécessaire à l'execution du script comme script principal
+"""
+
+def plot_estimateurs():
+    epsilons = [0.001, 0.01, 0.1, 0.5, 1]
+    h = int(1e-3)
+
+    naif = [MC_naif(x1+0.1, epsilon, h, 1000) for epsilon in epsilons]
+    print("naif ok")
+    AMS = [estimateur_AMS(x1+0.1, 1000, h, epsilon) for epsilon in epsilons]
+    print("AMS ok")
+    plt.plot(np.log10(epsilons), naif, label='Méthode de Monte-Carlo naïve')
+    plt.plot(np.log10(epsilons), AMS, label='Estimateur AMS')
     plt.title("Comparaison des méthodes de Monte-Carlo")
-    plt.xlabel("Epsilon")
+    plt.xlabel("Epsilon (echelle log10)")
     plt.ylabel("Probabilité")
     plt.legend()
     # sauvegarde de l'image
     plt.savefig("comparaison.png")
     plt.show()
-    #"""
+
+
+if __name__ == '__main__':
+    print(estimateur_AMS(x1+0.1, 1000, 0.1, 0.01))
